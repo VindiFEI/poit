@@ -7,7 +7,7 @@
 
 DHT dht(33, DHT11);
 
-const int DGPIN=33;
+const int DGPIN=32;
 MQ135 gasSensor = MQ135(DGPIN);
 
 //nazov mojej bezdrotovej siete
