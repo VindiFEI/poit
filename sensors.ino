@@ -1,9 +1,12 @@
+//data spracujem do JSON formatu a potom odoslem
+#include <ArduinoJson.h>
 //kniznica pre dht senzor(teplota a vlhkost)
 #include "DHT.h"
 //kniznica pre mq senzor(kvalita vzduchu)
 #include "MQ135.h"
 //kniznica na bezdrotove pripojenie
 #include <WiFi.h>
+
 
 DHT dht(33, DHT11);
 
@@ -15,19 +18,19 @@ const char* ssid = "net";
 //heslo
 const char* password = "operationmincemeat1943";
 
-//nastavenie portu (80)
-WiFiServer server(80);
+//nastavenie portu
+const uint16_t port = 8090;
 
-String header;
+//nastavenie IP prijmatela
+const char * host = "192.168.100.16";
 
-
+StaticJsonDocument<200> message;
 
 void setup() {
   Serial.begin(9600);
 
   dht.begin();
 
-  
   //pripojenie ku sieti
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -42,33 +45,35 @@ void setup() {
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  server.begin();
   
 }
 void loop() {
 
-  WiFiClient client = server.available();
+  WiFiClient client;
 
-  delay(5000);
+  if (!client.connect(host, port)) {
+
+        Serial.println("Connection to host failed");
+
+        delay(10000);
+        return;
+    }
+
+  delay(10000);
   //vlhkost
   float h = dht.readHumidity();
   // teplota(Celsius)
   float t = dht.readTemperature();
+  //kvalita vzduchu
+  float ppm = gasSensor.getPPM();
   
-  if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor");
     return;
   }
 
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print("%  Temperature: ");
-  Serial.print(t);
-  Serial.print("°C ");
+  message["humidity"] = h;
+  message["temperature"] = t;
+  message["ppm"] = ppm;
   
-  //kvalita vzduchu
-  float ppm = gasSensor.getPPM();
-  Serial.print(" ppm: ");
-  Serial.println(ppm);
-
+  serializeJsonPretty(message, client);
 }
