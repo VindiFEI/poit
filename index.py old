@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import cgi
+import cgitb
+import threading
+import socket
+
+cgitb.enable()
+print("Content-Type: text/html; charset=utf-8\n\n")
+worker = None
+
+def socket_worker(): # tu dorobit pripojenie na databazu
+    #while True: #tuto vyriesit pisanie do databazy, nieco na styl nekonecny cyklus caka na data zo socketu a vzdy ked pridu, tak vykona insert. Ked data pridu s rozumnym odstupom, napr 1sec, tak by to malo byt thread safe
+    for x in range(0, 3):
+        print("bla")
+
+def start_worker():
+    global worker
+    worker = threading.Thread(target=socket_worker)
+    worker.daemon = True
+    worker.start()
+
+# sem dopisat strukturu web stranky a pushnut to do browseru
+print("henlo\n")
+print("before worker\n")
+
+# start worker by mal byt pusteny cez button
+start_worker()
