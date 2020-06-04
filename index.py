@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.6
 # -*- coding: utf-8 -*-
 import cgitb
 import cgi
@@ -6,12 +6,25 @@ cgitb.enable()
 print("Content-Type: text/html; charset=utf-8\n\n")
 import threading
 import socket
-import pymysql
-import pymysql.cursors
+#import pymysql
+#import pymysql.cursors
 import json
-from flask import Flask, request
+#import requests
+from flask import Flask
+from flask_mysqldb import MySQL
+#import werkzeug
 
 worker = None
+
+app = Flask(__name__)
+
+@app.route('/')
+def users():
+    cur = mysql.connection.cursor()
+    cur.execute('''SELECT user, host FROM mysql.user''')
+    rv = cur.fetchall()
+    return str(rv)
+
 
 def socket_worker():
     # pripojenie do databazy
@@ -70,18 +83,16 @@ def socket_worker():
             
             #chcelo by to spravit ako samostatnu funkciu, ale nejde. To by connection variable musela byt globalna
             #dat if else na Celius alebo fahrenheit, podla toho sa spravi select
+            # mozno sa v plotly da posielat viac udajov a potom len checkboxom vybrat to, co chceme, to by bolo pekne(teraz rozdiel medzi C a 
             
             cur = connection.cursor()
-            print("KABEL")
             # Read a single record
             sql_select = "SELECT * FROM data WHERE id = ( SELECT MAX(id) FROM data )"
             cur.execute(sql_select)
             result = cur.fetchone()
-            print(result)    
-
-            open_button()
-            
-                
+            print(result)
+            return jsonify(result)
+               
         except :
             pass
     
@@ -97,9 +108,7 @@ def start_worker():
     worker = threading.Thread(target=socket_worker)
     worker.daemon = True
     worker.start()
-    
-def open_button():
-    
+        
     #pridat vyber medzi Celsius a Fahrenheit
 
 # sem dopisat strukturu web stranky a pushnut to do browseru
@@ -121,55 +130,39 @@ html = '''\
     <title>moje kuzelne zadanie</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function()
+{ 
+     $("#start").click(myFunction);
+
+});
+
+function myFunction()
+{
+
+$.ajax({
+    url: "index.py",
+    type: "GET",
+    success: function(data) {
+            console.log("This is the returned data: " + JSON.stringify(data));
+    },
+    error: function(error){
+            console.log("Here is the error res: " + JSON.stringify(error));
+    }
+ });
+}
+</script>
 <body>
     <h1>Zadanie</h1>
     <p>Hello There!</p>
     <p>General Kenobi!</p>
-    <button type="button">Celsius</button>
-    <button type="button">Fahrenheit</button> 
+    <button type="button" id="start">Celsius</button> 
     <p>$node</p>
 </body>
 </html>
 '''
 print(html)
 
-
-#while True:
-
-#    client, addr = s.accept()
-    
-#    print('Connected with ' + addr[0] + ':' + str(addr[1]))
-
- #   while True:
-      #  content = client.recv(1024)
-
-     #   if len(content) == 0:
-      #      break
-
-    #    else:
-        #    print(content.decode("utf-8"))
-         #   node = json.loads(content.decode("utf-8"))
-         #   print("<p></p>")
-
-            # vlhkost, vytiahnem z json stringu
-         #   humidity = float(node["humidity"])
-
-            # teplota
-          #  temperature = float(node["temperature"])
-
-            # ppm
-          #  ppm = float(node["ppm"])
-
-            # f = open("/file/zapis", "a")
-            # f.write(node)
-            # f.close()
-    
-  #  client.close()
-
-
-
-
-#cele = Template(html)
-#print(cele)
-
-
+if name == 'main':
+    app.run(debug=True)
