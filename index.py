@@ -1,59 +1,120 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-#print("Content-Type: text/html\n\n")
-
 import cgitb
-cgitb.enable()
-print("Content-Type: text/html;charset=utf-8")
-print()
-print("Hello World!")
-
-import socket
-import json
-#from flask import Flask, render_template
-import time
-#import MySQLdb
 import cgi
-import unicodedata
-import codecs
-import sys
-from string import Template
+cgitb.enable()
+print("Content-Type: text/html; charset=utf-8\n\n")
+import threading
+import socket
+import pymysql
+import pymysql.cursors
+import json
+from flask import Flask, request
 
-s = socket.socket()
+worker = None
 
-s.bind(('0.0.0.0', 8090))
-s.listen(0)
+def socket_worker():
+    # pripojenie do databazy
+    connection = pymysql.connect(host='localhost', user='adamko', password='FCST1923', db='zadanie', charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+    
+    # otvorenie suboru  
+    try:
+        f = open("/var/www/html/cgi-enabled/file/record.txt", "w")
+    except IOError:
+        print("chyba pri otvarani suboru")
 
-while True:
-
-    client, addr = s.accept()
-
-    while True:
-        content = client.recv(1024)
-
-        if len(content) == 0:
-            break
-
-        else:
-            print(content.decode("utf-8"))
-            node = json.loads(content.decode("utf-8"))
-            print("<p></p>")
-
+ #       with connection.cursor() as cursor:
+#            # Read a single record
+#            sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
+#            cursor.execute(sql, ('webmaster@python.org',))
+ #           result = cursor.fetchone()
+#            print(result)
+    
+    
+    #while True:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.bind(('0.0.0.0', 50000))
+    s.settimeout(0.5)
+    global data, addr
+    
+    while True:              
+        try:
+            data, addr = s.recvfrom(1024)
+            node = json.loads(data.decode("utf-8"))
+           # print(node)
+            
+            #zapis do suboru
+      #      f.write(str(Node))
+            f.write("ahoj")
+            
             # vlhkost, vytiahnem z json stringu
-            humidity = float(node["humidity"])
-
-            # teplota
-            temperature = float(node["temperature"])
+            humidity = float(node['humidity'])
+            
+             # teplota(C)
+            temperatureC = float(node["temperature(C)"])
+            
+             # teplota(F)
+            temperatureF = float(node["temperature(F)"])
 
             # ppm
             ppm = float(node["ppm"])
+            
+            with connection.cursor() as cursor:
+                # zapis do db
+                sql = "INSERT INTO data (temperatureC, temperatureF, humidity, ppm) VALUES ('%s', '%s', '%s', '%s')"
+                cursor.execute(sql, (temperatureC, temperatureF, humidity, ppm))
+                connection.commit()
+                
+                # dopplnit button, ktory vysle signal, aby sme vyskocili z cyklu
+                
+            
+            #chcelo by to spravit ako samostatnu funkciu, ale nejde. To by connection variable musela byt globalna
+            #dat if else na Celius alebo fahrenheit, podla toho sa spravi select
+            
+            cur = connection.cursor()
+            print("KABEL")
+            # Read a single record
+            sql_select = "SELECT * FROM data WHERE id = ( SELECT MAX(id) FROM data )"
+            cur.execute(sql_select)
+            result = cur.fetchone()
+            print(result)    
 
-            # f = open("/file/zapis", "a")
-            # f.write(node)
-            # f.close()
+            open_button()
+            
+                
+        except :
+            pass
     
-    client.close()
+    # spytat sa, preco mi nejde zatvorit suboru a tym padom aj ulozit udaje
+    f.close()
+    print(f.closed)
+    print("zatvaram subor")
+    # ukoncenie zapisu do db
+    connection.close()
     
+def start_worker():
+    global worker
+    worker = threading.Thread(target=socket_worker)
+    worker.daemon = True
+    worker.start()
+    
+def open_button():
+    
+    #pridat vyber medzi Celsius a Fahrenheit
+
+# sem dopisat strukturu web stranky a pushnut to do browseru
+print("henlo\n")
+print("before worker\n")
+
+
+# pridat button na premazanie dat, to by bola fajn vec navyse
+
+#pridat button na vypisanie najvyssej nameranej teploty alebo vlhkosti
+
+# start worker by mal byt pusteny cez button
+start_worker()
+
+
 html = '''\
 <!DOCTYPE html>
 <html>
@@ -64,16 +125,51 @@ html = '''\
     <h1>Zadanie</h1>
     <p>Hello There!</p>
     <p>General Kenobi!</p>
+    <button type="button">Celsius</button>
+    <button type="button">Fahrenheit</button> 
     <p>$node</p>
 </body>
 </html>
 '''
 print(html)
 
-cele = Template(html)
-print(cele)
 
-# https://stackoverflow.com/questions/58880873/run-a-python-module-in-a-flask-html-template
+#while True:
 
+#    client, addr = s.accept()
+    
+#    print('Connected with ' + addr[0] + ':' + str(addr[1]))
+
+ #   while True:
+      #  content = client.recv(1024)
+
+     #   if len(content) == 0:
+      #      break
+
+    #    else:
+        #    print(content.decode("utf-8"))
+         #   node = json.loads(content.decode("utf-8"))
+         #   print("<p></p>")
+
+            # vlhkost, vytiahnem z json stringu
+         #   humidity = float(node["humidity"])
+
+            # teplota
+          #  temperature = float(node["temperature"])
+
+            # ppm
+          #  ppm = float(node["ppm"])
+
+            # f = open("/file/zapis", "a")
+            # f.write(node)
+            # f.close()
+    
+  #  client.close()
+
+
+
+
+#cele = Template(html)
+#print(cele)
 
 
