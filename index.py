@@ -23,32 +23,43 @@ socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock()
 
-# pripojenie do databazy
-db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+# Problemy :
+# 1. start/stop - Na stlacenie buttonu sa to spusti, na druhe(stop) to uz nefunguje skusil som nastavit nejaku flag, ktora by mala hodnoty 1 a 0 a podla nej by sa urcovalo, ci sa
+# spusti cyklus alebo nie. Fungovalo to na zastavenie, ale ked som opatovne stlacil start, aby sa nastavila
+# na jednotku, tak uz to neslo.
 
-# otvorenie suboru
-try:
-    f = open("/home/pi/Documents/poit/zadanie/file/record/txt",'a')
-except IOError:
-    print("Chyba pri otvarani suboru")
+# 2. vobec nejde disconnect, ja nechapem preco. Je tam prikaz disconnect a vobec to na to nereaguje
+
+# 3. neni som si isty, ci bude treba aj zastavovat vystup z mojej dosky, alebo nie. Ale ukazuje sa to ako komplikovanejsie,
+# nez som predpokladal. Dokazem odoslat na dosku 1(mozno pojde aj nula, ak rozbeham funkciu disconnect_request(), ale ako problem sa javi
+# ze ten vypis tam prebieha v cykle, on prijme paketu s jednotkou len raz, to znamena, ze dostane len raz prikaz na vykonanie odoslania nameranych
+# dat, vo zvysnych pripadoch uz ma nulu a vysielanie prestane. Ak to bude treba spravit, tak mi napada jedine, ze smerom na dosku bude potrebne odosielat
+# nepretrzite bud 1(posielaj) alebo 0(bud uz konecne ticho). Ine mi nenapada, neni som nejaky programator
+
+# 4. Stale sa mi nedari pisat do suboru, asi to bude tym, ze nejde funkcia disconnect_request(), kde je f.close(). Pravdepodobne sa vtedy ulozia vsetky zmeny suboru,
+# ak sa funkcia close nevykona, subor ostane aky bol.
+
+
+
 
 def background_thread(args):
-    while True:
+    global data, addr  
+    
+    while flag > 0:
         try:
             data, addr = s.recvfrom(1024)
             print("received message %s" % data)
             node = json.loads(data.decode("utf-8"))          
-            print(node)
             
             #zapis do suboru
-         #   f.write("%s\r\n" %node)
+          #  f.write("%s\n" %node)
             
             # vlhkost
             humidity = float(node['humidity'])
             # teplota(C)
-            temperatureC = float(node['temperature(C)'])
+            temperatureC = float(node['temperature_C'])
             #teplota(F)
-            temperatureF = float(node['temperature(F)'])
+            temperatureF = float(node['temperature_F'])
             #ppm
             ppm = float(node['ppm'])
             
@@ -58,47 +69,50 @@ def background_thread(args):
             cursor.execute(sql_zapis, (temperatureC, temperatureF, humidity, ppm))
             db.commit()
             # posielam klientovi opat JSON, aj ked to neni prave najefektivnejsie, aby sa parsoval dvakrat
-            socketio.emit('json_data', {'data': data}, namespace='/')  
-        except socket.timeout:
+            socketio.emit('json_data', {'data': data}, namespace='/')
+        except:
             pass
     
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
 
-@socketio.on('start_stop_request', namespace='/senzory')
+@socketio.on('start_stop_request')
 def start_stop(message):
-    global thread
+    global thread, flag
     if message['value'] == 'start':
+        flag = 1
+        # otvorenie suboru
+        try:
+            f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'a')
+        except IOError:
+            print("Chyba pri otvarani suboru")
         with thread_lock:
             if thread is None:
                 thread = socketio.start_background_task(target=background_thread, args=session._get_current_object())
     if message['value'] == 'stop':
-        disconnect()    
+       # f.close()
+        flag = 0
+           
+@socketio.on('disconnect')
+def disconnect_request(): 
+    message =b"0"
+    s.sendto(message,('192.168.100.24',50000))
+    print('Client disconnected')
+    disconnect()
 
-# po nadviazani spojenia presmerovat na stranku, kde sa to da spustat a vypinat, po stlaceni disconnect spat na uvodnu stranku s jednym tlacidlom
-@app.route('/', methods=['GET', 'POST'])
 @socketio.on('connect')
-def connect():
-    # nastavenie socketov
+def connect_request():
+    global s, db, f
+    # socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # pripojenie do db
+    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
     s.bind(('', 50000))
-    s.settimeout(2.5)
+    s.settimeout(0.5)
     message =b"1"
     print("message: %s" % message)
     s.sendto(message,('192.168.100.24',50000))
-    global data, addr   
-    # pridat aj kontrolu pripojenia
-    return render_template('senzory.html', async_mode=socketio.async_mode)
-            
-@socketio.on('disconnect', namespace='/senzory')
-def disconnect():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    message =b"0"
-    print("message: %s" % message)
-    s.sendto(message,('192.168.100.24',50000))
-    print('Client disconnected', request.sid)
-    return render_template('index.html', async_mode=socketio.async_mode)
 
 if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=8080, debug=True)
