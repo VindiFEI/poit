@@ -222,98 +222,80 @@
 </div>
 
 <nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
-  <a class="navbar-brand" href="#">Data</a>
+  <a class="navbar-brand" href="#">Dáta</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse" id="collapsibleNavbar">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" href="#database">Zobrazenie údajov z databázy</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#file">Zobrazenie údajov zo súboru</a>
-      </li>    
+        <a class="nav-link" href="#database">Zobrazenie údajov</a>
+      </li>  
     </ul>
   </div>  
 </nav>
 <section id="Data">
-  <div class="container" style="margin-top:30px">
+  <div class="container" style="margin-top:2.5%">
     <div class="row">
-      <div class="col-sm-4">
-        <h2>Buttons</h2>
-        <h5>Click me:</h5>
-        <div class="buttons connect">
+      <div class="col-sm-3">
+        <h2>Ovládanie</h2>
+        <!--<h5 style="margin-top:5%">Click me:</h5>-->
+        <div class="buttons connect" style="margin-top:10%">
+          <p>Spustenie aplikácie</p>
           <button id="connect" type="submit" class="btn btn-info" value="connect">Open</button>
+        </div>
+         <div class="buttons connect" style="margin-top:5%">
+          <p>Ukončenie aplikácie</p>
           <button id="disconnect" type="submit" class="btn btn-info" value="disconnect">Close</button>
+        </div>
+        <div class="buttons connect" style="margin-top:5%">
+          <p>Odštartovanie/zastavenie monitorovania</p>
           <button id="buttonVal" type="submit" class="btn btn-info" value="start">Start</button>
-        </div>
-        <h5>Database</h5>
-        <div class="buttons database">
-          <button id="load" type="submit" class="btn btn-info" value="load">Load database</button>
-          <button id="delete" type="submit" class="btn btn-info" value="delete">Delete</button>
-        </div>
-        <h5>File</h5>
-        <div class="buttons database">
-          <button id="load_file" type="submit" class="btn btn-info" value="load_file">Load file</button>
-          <button id="delete_file" type="submit" class="btn btn-info"value="delete_file">Delete file</button>
         </div>
         <hr class="d-sm-none">
       </div>
-      <div class="col-sm-4">
-        <h2>Ploty</h2>
-        <h5>Fences</h5>
+      <div class="col-sm-6 text-center justify-content-center align-items-center">
+        <h2>Grafy</h2>
+        <h5 style="margin-top:5%">Voľba jednotiek</h5>
+        <div class="form-check">
+          <label class="form-check-label">
+            <input type="radio" class="form-check-input" name="optradio">Fahrenheity
+          </label>
+        </div>
+        <div class="form-check">
+          <label class="form-check-label">
+            <input type="radio" class="form-check-input" name="optradio">Stupne Celzia
+          </label>
+        </div>
         <div id="plotdiv" style="width:600px;height:250px;"></div>
         <div id="plotdiv2" style="width:600px;height:250px;"></div>
       </div>
-      <div class="col-sm-4">
-        <h2>part 3</h2>
-        <h5>Receive:</h5>
+      <div class="col-sm-3">
+        <h2>Výpis údajov</h2>
+        <h5 style="margin-top:10%">Receive:</h5>
         <div id="log"></div>
       </div>
     </div>
   </div>
 </section>  
 <section id="database">
-  <div class="container" style="margin-top:30px">
+  <div class="container" style="margin-top:5%">
     <div class="row">
-      <div class="col-sm-4">
-        <h2>About Me</h2>
-        <h5>Photo of me:</h5>
-        <div class="fakeimg">Fake Image</div>
-        <p>Some text about me in culpa qui officia deserunt mollit anim..</p>
-        <h3>Some Links</h3>
-        <p>Lorem ipsum dolor sit ame.</p>
-        <ul class="nav nav-pills flex-column">
-          <li class="nav-item">
-            <a class="nav-link active" href="#">Active</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Disabled</a>
-          </li>
-        </ul>
+      <div class="col-sm-6" style="margin-bottom:20%">
+        <h2>Zobrazenie údajov</h2>
+        <h5 style="margin-top:5%">Zobrazenie údajov z databázy</h5>
+        <div class="buttons database" style="margin-top:5%">
+          <button id="load" type="submit" class="btn btn-info" value="load">Load database</button>
+          <button id="delete" type="submit" class="btn btn-info" value="delete">Delete</button>
+        </div>
         <hr class="d-sm-none">
       </div>
-      <div class="col-sm-4">
-        <h2>TITLE HEADING</h2>
-        <h5>Title description, Dec 7, 2017</h5>
-        <div class="fakeimg">Fake Image</div>
-        <p>Some text..</p>
-        <p>Sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>
-        <br>
-      </div>
-      <div class="col-sm-4">
-        <h2>TITLE HEADING</h2>
-        <h5>Title description, Sep 2, 2017</h5>
-        <div class="fakeimg">Fake Image</div>
-        <p>Some text..</p>
-        <p>Sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>
+      <div class="col-sm-6" style="margin-bottom:20%">
+        <h5 style="margin-top:12.5%">Zobrazenie údajov zo súboru</h5>
+        <div class="buttons file" style="margin-top:5%">
+          <button id="load_file" type="submit" class="btn btn-info" value="load_file">Load file</button>
+          <button id="delete_file" type="submit" class="btn btn-info"value="delete_file">Delete file</button>
+        </div>
       </div>
       <div class="col-sm-4">
         <h2>part 3</h2>
@@ -349,8 +331,7 @@
       </div>
 </section>
 <div class="jumbotron text-center" style="margin-bottom:0">
-  <p>Footer</p>
+  <p>Záverečné zadanie - Bodorík, Hirjáková</p>
 </div>
-
 </body>
 </html>
