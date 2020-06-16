@@ -1,175 +1,153 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-import cgitb
-import cgi
-cgitb.enable()
-print("Content-Type: text/html; charset=utf-8\n\n")
-import threading
+from threading import Lock
+from flask import Flask, render_template, session, request, jsonify, url_for
+from flask_socketio import SocketIO, emit, disconnect
+import MySQLdb
 import socket
-import pymysql
-import pymysql.cursors
+import ConfigParser
 import json
-from flask import Flask, request
+import os
 
-worker = None
+async_mode = None
 
-def socket_worker():
-    # pripojenie do databazy
-    connection = pymysql.connect(host='localhost', user='adamko', password='FCST1923', db='zadanie', charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
-    
-    # otvorenie suboru  
-    try:
-        f = open("/var/www/html/cgi-enabled/file/record.txt", "w")
-    except IOError:
-        print("chyba pri otvarani suboru")
+app = Flask(__name__)
 
- #       with connection.cursor() as cursor:
-#            # Read a single record
-#            sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
-#            cursor.execute(sql, ('webmaster@python.org',))
- #           result = cursor.fetchone()
-#            print(result)
+# nacitanie suboru s prihlasovacimi udajmi a adresou do nasej databazy
+config = ConfigParser.ConfigParser()
+config.read('config.cfg')
+myhost = config.get('mysqlDB', 'host')
+myuser = config.get('mysqlDB', 'user')
+mypasswd = config.get('mysqlDB', 'passwd')
+mydb = config.get('mysqlDB', 'db')
+
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app, async_mode=async_mode)
+thread = None
+thread_lock = Lock()
+thread2 = None
+thread2_lock = Lock()
+
+# Problemy :
+#1. Open sa pripoji, start/stop funguje, close ukonci pripojenie. Avsak po refreshnuti stranky ide start/stop bez toho, aby som sa vobec pripojil(stlacil Open) :(((((((((
+
+# 3. neni som si isty, ci bude treba aj zastavovat vystup z mojej dosky, alebo nie. Ale ukazuje sa to ako komplikovanejsie,
+# nez som predpokladal. Dokazem odoslat na dosku 1(mozno pojde aj nula, ak rozbeham funkciu disconnect_request(), ale ako problem sa javi
+# ze ten vypis tam prebieha v cykle, on prijme paketu s jednotkou len raz, to znamena, ze dostane len raz prikaz na vykonanie odoslania nameranych
+# dat, vo zvysnych pripadoch uz ma nulu a vysielanie prestane. Ak to bude treba spravit, tak mi napada jedine, ze smerom na dosku bude potrebne odosielat
+# nepretrzite bud 1(posielaj) alebo 0(bud uz konecne ticho). Ine mi nenapada, neni som nejaky programator
+# 5.Mozno by bolo fajn, keby si prerobila tie buttony navyse(tj okrem open,close a start/stop) na drop down menu s potvrdenim?
+
+def background_thread(args):
+    global data, addr  
     
-    
-    #while True:
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(('0.0.0.0', 50000))
-    s.settimeout(0.5)
-    global data, addr
-    
-    while True:              
+    while flag > 0:
         try:
             data, addr = s.recvfrom(1024)
-            node = json.loads(data.decode("utf-8"))
-           # print(node)
-            
-            #zapis do suboru
-      #      f.write(str(Node))
-            f.write("ahoj")
-            
-            # vlhkost, vytiahnem z json stringu
+            print("received message %s" % data)
+            node = json.loads(data.decode("utf-8"))          
+            # vlhkost
             humidity = float(node['humidity'])
+            # teplota(C)
+            temperatureC = float(node['temperature_C'])
+            #teplota(F)
+            temperatureF = float(node['temperature_F'])
+            #ppm
+            ppm = float(node['ppm'])
             
-             # teplota(C)
-            temperatureC = float(node["temperature(C)"])
-            
-             # teplota(F)
-            temperatureF = float(node["temperature(F)"])
+            #zapis do databazy
+            cursor = db.cursor()
+            sql_zapis = "INSERT INTO data (temperatureC, temperatureF, humidity, ppm) VALUES ('%s', '%s', '%s', '%s')"     
+            cursor.execute(sql_zapis, (temperatureC, temperatureF, humidity, ppm))
+            db.commit()
 
-            # ppm
-            ppm = float(node["ppm"])
-            
-            with connection.cursor() as cursor:
-                # zapis do db
-                sql = "INSERT INTO data (temperatureC, temperatureF, humidity, ppm) VALUES ('%s', '%s', '%s', '%s')"
-                cursor.execute(sql, (temperatureC, temperatureF, humidity, ppm))
-                connection.commit()
+            # otvorenie suboru
+            try:
+                if os.path.exists("/home/pi/Documents/poit/zadanie/file/record.txt"):
+                    f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'a')
+                else:
+                    f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'w')
+            except IOError:
+                print("Chyba pri otvarani suboru")
                 
-                # dopplnit button, ktory vysle signal, aby sme vyskocili z cyklu
-                
-            
-            #chcelo by to spravit ako samostatnu funkciu, ale nejde. To by connection variable musela byt globalna
-            #dat if else na Celius alebo fahrenheit, podla toho sa spravi select
-            
-            cur = connection.cursor()
-            print("KABEL")
-            # Read a single record
-            sql_select = "SELECT * FROM data WHERE id = ( SELECT MAX(id) FROM data )"
-            cur.execute(sql_select)
-            result = cur.fetchone()
-            print(result)    
-
-            open_button()
-            
-                
-        except :
+            f.write(data)
+            f.write("\n")
+            f.close()
+          
+            # posielam klientovi opat JSON, aj ked to neni prave najefektivnejsie, aby sa parsoval dvakrat
+            socketio.emit('json_data', {'data': data}, namespace='/')
+        except:
             pass
     
-    # spytat sa, preco mi nejde zatvorit suboru a tym padom aj ulozit udaje
+@app.route('/')
+def index():
+    return render_template('index.html', async_mode=socketio.async_mode)
+
+@socketio.on('start_stop_request')
+def start_stop(message):
+    global thread, flag
+    if message['value'] == 'start':
+        print("Henlo")
+        flag = 1
+        with thread_lock:
+            if thread is None:
+                thread = socketio.start_background_task(target=background_thread, args=session._get_current_object())
+    if message['value'] == 'stop':
+        flag = 0
+        thread = None
+           
+@socketio.on('disconnect_request')
+def disconnect_request(): 
+    message =b"0"
+    s.sendto(message,('192.168.100.24',50000))
+    print('Client disconnected')
+    disconnect()
+
+@socketio.on('connect_request')
+def connect_request():
+    global s, db, f
+    # socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # pripojenie do db
+    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+    s.bind(('', 50000))
+    s.settimeout(0.5)
+    message =b"1"
+    print("message: %s" % message)
+    s.sendto(message,('192.168.100.24',50000))
+    
+@socketio.on('delete_request')
+def delete_request():
+    cursor = db.cursor()
+    sql = "DELETE FROM data"
+    cursor.execute(sql)
+    db.commit()
+
+@socketio.on('delete_request_file')
+def delete_request_file():
+    if os.path.exists("/home/pi/Documents/poit/zadanie/file/record.txt"):
+        os.remove("/home/pi/Documents/poit/zadanie/file/record.txt")
+        
+@socketio.on('load_request')
+def load_request():
+    cursor = db.cursor()
+    sql = "SELECT temperatureC, temperatureF, humidity, ppm FROM data"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+  #  send_result = json.dumps(result)
+    socketio.emit('db_data', {'data': result}, namespace='/')
+    
+@socketio.on('load_request_file')
+def load_request_file():
+    try:
+        if os.path.exists("/home/pi/Documents/poit/zadanie/file/record.txt"):
+            f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'r')
+    except IOError:
+        print("Chyba pri otvarani suboru")
+            
+    with open("/home/pi/Documents/poit/zadanie/file/record.txt",'r') as openfileobject:
+        for line in openfileobject:
+            result = f.readline()
+            socketio.emit('file_data', {'data': result}, namespace='/')
     f.close()
-    print(f.closed)
-    print("zatvaram subor")
-    # ukoncenie zapisu do db
-    connection.close()
-    
-def start_worker():
-    global worker
-    worker = threading.Thread(target=socket_worker)
-    worker.daemon = True
-    worker.start()
-    
-def open_button():
-    
-    #pridat vyber medzi Celsius a Fahrenheit
-
-# sem dopisat strukturu web stranky a pushnut to do browseru
-print("henlo\n")
-print("before worker\n")
-
-
-# pridat button na premazanie dat, to by bola fajn vec navyse
-
-#pridat button na vypisanie najvyssej nameranej teploty alebo vlhkosti
-
-# start worker by mal byt pusteny cez button
-start_worker()
-
-
-html = '''\
-<!DOCTYPE html>
-<html>
-    <title>moje kuzelne zadanie</title>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<body>
-    <h1>Zadanie</h1>
-    <p>Hello There!</p>
-    <p>General Kenobi!</p>
-    <button type="button">Celsius</button>
-    <button type="button">Fahrenheit</button> 
-    <p>$node</p>
-</body>
-</html>
-'''
-print(html)
-
-
-#while True:
-
-#    client, addr = s.accept()
-    
-#    print('Connected with ' + addr[0] + ':' + str(addr[1]))
-
- #   while True:
-      #  content = client.recv(1024)
-
-     #   if len(content) == 0:
-      #      break
-
-    #    else:
-        #    print(content.decode("utf-8"))
-         #   node = json.loads(content.decode("utf-8"))
-         #   print("<p></p>")
-
-            # vlhkost, vytiahnem z json stringu
-         #   humidity = float(node["humidity"])
-
-            # teplota
-          #  temperature = float(node["temperature"])
-
-            # ppm
-          #  ppm = float(node["ppm"])
-
-            # f = open("/file/zapis", "a")
-            # f.write(node)
-            # f.close()
-    
-  #  client.close()
-
-
-
-
-#cele = Template(html)
-#print(cele)
-
-
+         
+if __name__ == '__main__':
+    socketio.run(app, host="0.0.0.0", port=8080, debug=True)
