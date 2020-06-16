@@ -12,6 +12,8 @@
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function() {
+      $('#dtBasicExample').DataTable();
+      $('.dataTables_length').addClass('bs-select');
         var x = new Array();
         var y = new Array();
         var trace;
@@ -273,6 +275,19 @@
       <div class="col-md-3">
         <h2>Výpis údajov</h2>
         <h5 style="margin-top:10%">Receive:</h5>
+        <table id="dtBasicExample" class="table table-striped table-bordered" cellspacing="0" width="100%">
+          <thead>
+            <tr>
+              <th class="th-sm">Temperature Celsius
+              </th>
+              <th class="th-sm">Temperature Fahrenheit
+              </th>
+              <th class="th-sm">Humidity
+              </th>
+            </tr>
+          </thead>
+
+        </table>
         <div id="log"></div>
       </div>
     </div>
@@ -288,6 +303,10 @@
           <button id="load" type="submit" class="btn btn-info" value="load">Load database</button>
           <button id="delete" type="submit" class="btn btn-info" value="delete">Delete</button>
         </div>
+        <div id="plotdiv3" style="width:600px;height:250px;"></div>
+        <div id="plotdiv4" style="width:600px;height:250px;"></div>
+        <h5 style="margin-top:10%">Receive:</h5>
+        <div id="log2"></div>
         <hr class="d-sm-none">
       </div>
       <div class="col-sm-6" style="margin-bottom:20%">
@@ -296,6 +315,10 @@
           <button id="load_file" type="submit" class="btn btn-info" value="load_file">Load file</button>
           <button id="delete_file" type="submit" class="btn btn-info"value="delete_file">Delete file</button>
         </div>
+        <div id="plotdiv5" style="width:600px;height:250px;"></div>
+        <div id="plotdiv6" style="width:600px;height:250px;"></div>
+        <h5 style="margin-top:10%">Receive:</h5>
+        <div id="log3"></div>
       </div>
       <div class="col-sm-4">
         <h2>part 3</h2>
