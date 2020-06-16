@@ -11,8 +11,8 @@
   <script src ="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
   <script src = "https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap.min.js"></script>
   <script src="static/libs/plotly-latest.min.js"></script>
-  <script src="static/libs/gauge.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+  <script src="static/libs/gauge.min.js"></script>
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function() {
         var x = new Array();
@@ -25,10 +25,11 @@
         var trace_h;
         var layout_h;
         var j = 0;
+        var pocet_db = 0;
         
         namespace = '/'
         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-
+        
         var gauge = new RadialGauge({
           renderTo: 'gauge',
           width: 300,
@@ -70,17 +71,80 @@
         });
         gauge.draw();
         gauge.value = "0";
+        
+        var gauge_h = new RadialGauge({
+          renderTo: 'gauge_h',
+          width: 300,
+          height: 300,
+          units: "%",
+          minValue:0,
+          maxValue: 100,
+          majorTicks: [
+              "0",
+              "10",
+              "20",
+              "30",
+              "40",
+              "50",
+              "60",
+              "70",
+              "80",
+              "90",
+              "100",
+          ],
+          minorTicks: 5,
+          strokeTicks: true,
+          highlights: [
+              {
+                  "from": 80,
+                  "to": 100,
+                  "color": "rgba(200, 50, 50, .75)"
+              }
+          ],
+          colorPlate: "#fff",
+          borderShadowWidth: 0,
+          borders: false,
+          needleType: "arrow",
+          needleWidth: 2,
+          needleCircleSize: 7,
+          needleCircleOuter: true,
+          needleCircleInner: false,
+          animationDuration: 1500,
+          animationRule: "linear"
+        });
+        gauge_h.draw();
+        gauge_h.value = "0";
+        
+        $('input[type="radio"]').on('click change', function(e) {
+            i = 0;
+            j = 0;
+            x = [];
+            y = [];
+            x_h = [];
+            y_h = [];
+            $('#log').empty();
+            $('#log2').empty();
+            $('#log3').empty();
+        });
+        
 
         socket.on('json_data', function(msg) {
         console.log(msg.data);
         var json_string = jQuery.parseJSON(msg.data);
-        console.log($('input[name=optradio]:checked').val());
-        $('#log').append(+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
-        gauge.value = msg.data; //fix
+        gauge.value = json_string.temperature_C;
+        gauge_h.value = json_string.humidity;
         x.push(parseFloat(i++));
         x_h.push(parseFloat(j++));
         //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
-        y.push(parseFloat(json_string.temperature_C));
+        if(($('input[name=optradio]:checked').val()) == "c"){
+            $('#log').append('Teplota: '+json_string.temperature_C+ ' Vlhkost: ' +json_string.humidity+ ' ppm: '  +json_string.ppm+'<br>').html();
+            y.push(parseFloat(json_string.temperature_C));
+        }
+        else{
+            $('#log').append('Teplota: '+json_string.temperature_F+ 'Vlhkost: ' +json_string.humidity+ 'ppm: '  +json_string.ppm+'<br>').html();
+            y.push(parseFloat(json_string.temperature_F));
+        }
+        
         y_h.push(parseFloat(json_string.humidity));
         //teplota
         trace = {
@@ -121,18 +185,18 @@
         });
         
         socket.on('db_data', function(msg) {
-        for(var i = 0; i < (msg.data).length; i++, j++){
+        for(i = 0, j = 0; i < (msg.data).length; i++, j++){
             if(($('input[name=optradio]:checked').val()) == "c"){
-                y.push(parseFloat(msg.data[i][0]));
+                y.push(parseFloat(msg.data[i][0]));  
                 $('#log2').append('Teplota(C): '+msg.data[i][0]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html(); 
             }
             else{
                 y.push(parseFloat(msg.data[i][1]));
-                $('#log2').append('Teplota(F): '+msg.data[i][0]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html();  
+                $('#log2').append('Teplota(F): '+msg.data[i][1]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html();  
             }
             y_h.push(parseFloat(msg.data[i][2]));
             x.push(parseFloat(i));
-            x_h.push(parseFloat(j));
+            x_h.push(parseFloat(i));
         }
         //teplota
         trace = {
@@ -151,8 +215,7 @@
         console.log(trace);
         var traces = new Array();
         traces.push(trace);
-        Plotly.newPlot($('#plotdiv3')[0], traces, layout); 
-        //vlhkost
+        Plotly.newPlot($('#plotdiv3')[0], traces, layout);
         trace_h = {
             x: x_h,
             y: y_h,
@@ -178,8 +241,13 @@
         $('#log3').append(+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
         x.push(parseFloat(i++));
         x_h.push(parseFloat(j++));
-        //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
-        y.push(parseFloat(json_string.temperature_C));
+        if(($('input[name=optradio]:checked').val()) == "c"){
+            y.push(parseFloat(json_string.temperature_C));
+        }
+        else{
+            y.push(parseFloat(json_string.temperature_F));
+        }
+
         y_h.push(parseFloat(json_string.humidity));
         //teplota
         trace = {
@@ -252,10 +320,22 @@
         $('#load').click(function(event) {
             console.log($('#load').val());
             socket.emit('load_request');
+            i = 0;
+            j = 0;
+            x = [];
+            y = [];
+            x_h = [];
+            y_h = [];
             return false; });
         $('#load_file').click(function(event) {
             console.log($('#load_file').val());
             socket.emit('load_request_file');
+            i = 0;
+            j = 0;
+            x = [];
+            y = [];
+            x_h = [];
+            y_h = [];
             return false; });
         });
     </script>
@@ -289,25 +369,19 @@
 <section id="Data">
   <div class="container-fluid" style="margin-top:2.5%">
     <div class="row">
-      <div class="col-md-3">
+      <div class="col-md-5 text-center justify-content-center align-items-center">
         <h2>Ovládanie</h2>
         <!--<h5 style="margin-top:5%">Click me:</h5>-->
         <div class="buttons connect" style="margin-top:10%">
-          <p>Spustenie aplikácie</p>
           <button id="connect" type="submit" class="btn btn-info" value="connect">Open</button>
-        </div>
-         <div class="buttons connect" style="margin-top:5%">
-          <p>Ukončenie aplikácie</p>
           <button id="disconnect" type="submit" class="btn btn-info" value="disconnect">Close</button>
-        </div>
-        <div class="buttons connect" style="margin-top:5%">
-          <p>Odštartovanie/zastavenie monitorovania</p>
           <button id="buttonVal" type="submit" class="btn btn-info" value="start">Start</button>
         </div>
-        <canvas id="gauge"></canvas>
+        <div id="plotdiv" style="width:600px;height:250px;"></div>
+        <canvas style="margin-top:5%" id="gauge"></canvas>
         <hr class="d-sm-none">
       </div>
-      <div class="col-md-6 text-center justify-content-center align-items-center">
+      <div class="col-md-5 text-center justify-content-center align-items-center">
         <h2>Grafy</h2>
         <h5 style="margin-top:5%">Voľba jednotiek</h5>
         <div class="form-check">
@@ -320,28 +394,12 @@
             <input type="radio" class="form-check-input" name="optradio" value ="c" checked="checked">Stupne Celzia
           </label>
         </div>
-        <div id="plotdiv" style="width:600px;height:250px;"></div>
         <div id="plotdiv2" style="width:600px;height:250px;"></div>
+        <canvas style="margin-top:5%" id="gauge_h"></canvas>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <h2>Výpis údajov</h2>
-        <h5 style="margin-top:10%">Receive:</h5>
-        <table id="dtBasicExample" class="table table-striped table-bordered" cellspacing="0" width="100%">
-          <thead>
-            <tr>
-              <th class="th-sm">C
-              </th>
-              <th class="th-sm">F
-              </th>
-              <th class="th-sm">Hum
-              </th>
-              <th class="th-sm">ppm
-              </th>
-            </tr>
-          </thead>
-          <tbody></tbody>  
-        </table>
-        <div class="pre-scrollable" id="log"></div>
+        <div style="margin-top:10%" class="pre-scrollable" id="log"></div>
       </div>
     </div>
   </div>
