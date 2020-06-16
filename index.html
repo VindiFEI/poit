@@ -11,6 +11,7 @@
   <script src ="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
   <script src = "https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap.min.js"></script>
   <script src="static/libs/plotly-latest.min.js"></script>
+  <script src="static/libs/gauge.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function() {
@@ -28,11 +29,54 @@
         namespace = '/'
         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
+        var gauge = new RadialGauge({
+          renderTo: 'gauge',
+          width: 300,
+          height: 300,
+          units: "C",
+          minValue:0,
+          maxValue: 45,
+          majorTicks: [
+              "0",
+              "5",
+              "10",
+              "15",
+              "20",
+              "25",
+              "30",
+              "35",
+              "40",
+              "45",
+          ],
+          minorTicks: 5,
+          strokeTicks: true,
+          highlights: [
+              {
+                  "from": 30,
+                  "to": 45,
+                  "color": "rgba(200, 50, 50, .75)"
+              }
+          ],
+          colorPlate: "#fff",
+          borderShadowWidth: 0,
+          borders: false,
+          needleType: "arrow",
+          needleWidth: 2,
+          needleCircleSize: 7,
+          needleCircleOuter: true,
+          needleCircleInner: false,
+          animationDuration: 1500,
+          animationRule: "linear"
+        });
+        gauge.draw();
+        gauge.value = "0";
+
         socket.on('json_data', function(msg) {
         console.log(msg.data);
         var json_string = jQuery.parseJSON(msg.data);
         console.log($('input[name=optradio]:checked').val());
         $('#log').append(+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
+        gauge.value = msg.data; //fix
         x.push(parseFloat(i++));
         x_h.push(parseFloat(j++));
         //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
@@ -260,6 +304,7 @@
           <p>Odštartovanie/zastavenie monitorovania</p>
           <button id="buttonVal" type="submit" class="btn btn-info" value="start">Start</button>
         </div>
+        <canvas id="gauge"></canvas>
         <hr class="d-sm-none">
       </div>
       <div class="col-md-6 text-center justify-content-center align-items-center">
