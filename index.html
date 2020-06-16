@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Monitorovanie a riadenie signálov</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  <script src="static/libs/plotly-latest.min.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+        var x = new Array();
+        var y = new Array();
+        var trace;
+        var layout;
+        var i = 0;
+        var x_h = new Array();
+        var y_h = new Array();
+        var trace_h;
+        var layout_h;
+        var j = 0;
+        
+        namespace = '/'
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+        socket.on('json_data', function(msg) {
+        console.log(msg.data);
+        var json_string = jQuery.parseJSON(msg.data);
+        $('#log').append('Received: '+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
+        x.push(parseFloat(i++));
+        x_h.push(parseFloat(j++));
+        //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
+        y.push(parseFloat(json_string.temperature_C));
+        y_h.push(parseFloat(json_string.humidity));
+        //teplota
+        trace = {
+            x: x,
+            y: y,
+        };       
+        layout = {
+          title: 'Teplota',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+          }
+        };
+        console.log(trace);
+        var traces = new Array();
+        traces.push(trace);
+        Plotly.newPlot($('#plotdiv')[0], traces, layout);
+        //vlhkost
+        trace_h = {
+            x: x_h,
+            y: y_h,
+        };       
+        layout_h = {
+          title: 'Vlhkost',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+          }
+        };
+        console.log(trace_h);
+        var traces_h = new Array();
+        traces_h.push(trace_h);
+        Plotly.newPlot($('#plotdiv2')[0], traces_h, layout_h);  
+        });
+        
+        socket.on('db_data', function(msg) {
+        for(var i = 0; i < (msg.data).length; i++, j++){
+            //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
+            y.push(parseFloat(msg.data[i][0]));
+            y_h.push(parseFloat(msg.data[i][2]));
+            x.push(parseFloat(i));
+            x_h.push(parseFloat(j));
+            $('#log2').append('Received: '+msg.data[i][0]+ ', ' +msg.data[i][1]+ ', ' +msg.data[i][2]+  ', ' +msg.data[i][3]+ '<br>').html(); 
+        }
+        //teplota
+        trace = {
+            x: x,
+            y: y,
+        };       
+        layout = {
+          title: 'Teplota',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+          }
+        };
+        console.log(trace);
+        var traces = new Array();
+        traces.push(trace);
+        Plotly.newPlot($('#plotdiv3')[0], traces, layout); 
+        //vlhkost
+        trace_h = {
+            x: x_h,
+            y: y_h,
+        };       
+        layout_h = {
+          title: 'Vlhkost',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+          }
+        };
+        console.log(trace_h);
+        var traces_h = new Array();
+        traces_h.push(trace_h);
+        Plotly.newPlot($('#plotdiv4')[0], traces_h, layout_h); 
+        });
+        
+        socket.on('file_data', function(msg) {
+        console.log(msg.data);
+        var json_string = jQuery.parseJSON(msg.data);
+        $('#log3').append('Received: '+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
+        x.push(parseFloat(i++));
+        x_h.push(parseFloat(j++));
+        //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
+        y.push(parseFloat(json_string.temperature_C));
+        y_h.push(parseFloat(json_string.humidity));
+        //teplota
+        trace = {
+            x: x,
+            y: y,
+        };       
+        layout = {
+          title: 'Teplota',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+          }
+        };
+        console.log(trace);
+        var traces = new Array();
+        traces.push(trace);
+        Plotly.newPlot($('#plotdiv5')[0], traces, layout);
+        
+        //vlhkost
+        trace_h = {
+            x: x_h,
+            y: y_h,
+        };       
+        layout_h = {
+          title: 'Vlhkost',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+          }
+        };
+        console.log(trace_h);
+        var traces_h = new Array();
+        traces_h.push(trace_h);
+        Plotly.newPlot($('#plotdiv6')[0], traces_h, layout_h); 
+        });
+        
+        $('#buttonVal').click(function(event) {
+            console.log($('#buttonVal').val());
+            socket.emit('start_stop_request',{value: $('#buttonVal').val()});
+            if ($(this).val() == "start") {
+                $(this).val("stop");
+                $(this).text("Stop");
+            }
+            else {
+                $(this).val("start");
+                $(this).text("Start");
+            }
+        return false; });
+        
+        $('#connect').click(function(event) {
+            console.log($('#connect').val());
+            socket.emit('connect_request');
+            return false; });
+        $('#disconnect').click(function(event) {
+            console.log($('#disconnect').val());
+            socket.emit('disconnect_request');
+            return false; });
+        $('#delete').click(function(event) {
+            console.log($('#delete').val());
+            socket.emit('delete_request');
+            return false; });
+        $('#delete_file').click(function(event) {
+            console.log($('#delete_file').val());
+            socket.emit('delete_request_file');
+            return false; });
+        $('#load').click(function(event) {
+            console.log($('#load').val());
+            socket.emit('load_request');
+            return false; });
+        $('#load_file').click(function(event) {
+            console.log($('#load_file').val());
+            socket.emit('load_request_file');
+            return false; });
+        });
+    </script>
+  <style>
+  .fakeimg {
+    height: 200px;
+    background: #aaa;
+  }
+  </style>
+</head>
+<body>
+
+<div class="jumbotron text-center" style="margin-bottom:0">
+  <h1>Monitorovanie a riadenie signálov</h1>
+  <p>Záverečné zadanie - Bodorík, Hirjáková</p> 
+</div>
+
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
+  <a class="navbar-brand" href="#">Dáta</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="#database">Zobrazenie údajov</a>
+      </li>  
+    </ul>
+  </div>  
+</nav>
+<section id="Data">
+  <div class="container-fluid" style="margin-top:2.5%">
+    <div class="row">
+      <div class="col-md-3">
+        <h2>Ovládanie</h2>
+        <!--<h5 style="margin-top:5%">Click me:</h5>-->
+        <div class="buttons connect" style="margin-top:10%">
+          <p>Spustenie aplikácie</p>
+          <button id="connect" type="submit" class="btn btn-info" value="connect">Open</button>
+        </div>
+         <div class="buttons connect" style="margin-top:5%">
+          <p>Ukončenie aplikácie</p>
+          <button id="disconnect" type="submit" class="btn btn-info" value="disconnect">Close</button>
+        </div>
+        <div class="buttons connect" style="margin-top:5%">
+          <p>Odštartovanie/zastavenie monitorovania</p>
+          <button id="buttonVal" type="submit" class="btn btn-info" value="start">Start</button>
+        </div>
+        <hr class="d-sm-none">
+      </div>
+      <div class="col-md-6 text-center justify-content-center align-items-center">
+        <h2>Grafy</h2>
+        <h5 style="margin-top:5%">Voľba jednotiek</h5>
+        <div class="form-check">
+          <label class="form-check-label">
+            <input type="radio" class="form-check-input" name="optradio">Fahrenheity
+          </label>
+        </div>
+        <div class="form-check">
+          <label class="form-check-label">
+            <input type="radio" class="form-check-input" name="optradio">Stupne Celzia
+          </label>
+        </div>
+        <div id="plotdiv" style="width:600px;height:250px;"></div>
+        <div id="plotdiv2" style="width:600px;height:250px;"></div>
+      </div>
+      <div class="col-md-3">
+        <h2>Výpis údajov</h2>
+        <h5 style="margin-top:10%">Receive:</h5>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+</section>  
+<section id="database">
+  <div class="container-fluid" style="margin-top:5%">
+    <div class="row">
+      <div class="col-sm-6" style="margin-bottom:20%">
+        <h2>Zobrazenie údajov</h2>
+        <h5 style="margin-top:5%">Zobrazenie údajov z databázy</h5>
+        <div class="buttons database" style="margin-top:5%">
+          <button id="load" type="submit" class="btn btn-info" value="load">Load database</button>
+          <button id="delete" type="submit" class="btn btn-info" value="delete">Delete</button>
+        </div>
+        <hr class="d-sm-none">
+      </div>
+      <div class="col-sm-6" style="margin-bottom:20%">
+        <h5 style="margin-top:12.5%">Zobrazenie údajov zo súboru</h5>
+        <div class="buttons file" style="margin-top:5%">
+          <button id="load_file" type="submit" class="btn btn-info" value="load_file">Load file</button>
+          <button id="delete_file" type="submit" class="btn btn-info"value="delete_file">Delete file</button>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <h2>part 3</h2>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="file">
+  <div class="container" style="margin-top:30px">
+    <div class="row">
+      <div class="col-sm-4">
+        <h2>About Me</h2>
+        <h5>Photo of me:</h5>
+        <div class="fakeimg">Fake Image</div>
+        <p>Some text about me in culpa qui officia deserunt mollit anim..</p>
+        <h3>Some Links</h3>
+        <p>Lorem ipsum dolor sit ame.</p>
+        <ul class="nav nav-pills flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Active</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+          </li>
+        </ul>
+        <hr class="d-sm-none">
+      </div>
+</section>
+<div class="jumbotron text-center" style="margin-bottom:0">
+  <p>Záverečné zadanie - Bodorík, Hirjáková</p>
+</div>
+</body>
+</html>
