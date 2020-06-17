@@ -47,12 +47,10 @@ void setup(){
 }
 
 void loop(){
-  
   udp.beginPacket(host, port);
- // udp.parsePacket();
-//  byte x = udp.read();
- // if(x > 0){
- //   while(1){
+  udp.parsePacket();
+  byte x = udp.read();
+  if(x > 0){
       float h = dht.readHumidity();
       // teplota(Celsius)
       float t = dht.readTemperature();
@@ -80,6 +78,5 @@ void loop(){
       udp.endPacket();
     
       delay(5000);
- //   }
-//  }
+  }
 }
