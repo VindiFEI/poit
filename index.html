@@ -160,6 +160,10 @@
               title: 'y',
           }
         };
+    /*layout = Layout(
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)'
+)  plotly transparent background??*/
         console.log(trace);
         var traces = new Array();
         traces.push(trace);
@@ -361,7 +365,7 @@
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <div class="collapse navbar-collapse" id="collapsibleNavbar" style="margin-bottom:2.5%">
+  <div class="collapse navbar-collapse" id="collapsibleNavbar">
     <ul class="navbar-nav">
       <li class="nav-item">
         <a class="nav-link" href="#database">Zobrazenie údajov</a>
@@ -393,12 +397,13 @@
             </div>
           </div>
           <!-- POZOR POZOR, NOVA VEC -->
-          
-          <div id="plotdiv" style="width:600px;height:250px;"></div>
-          <canvas style="margin-top:5%" id="gauge"></canvas>
+          <div class="text-center justify-content-center align-items-center" style="margin-top:12%">
+            <div id="plotdiv" style="width:600px;height:250px;"></div>
+            <canvas style="margin-top:5%" id="gauge"></canvas>
+          </div>
           <hr class="d-sm-none">
         </div>
-        <div class="col-md-5 text-center justify-content-center align-items-center" style="margin-top:2.5%">
+        <div class="col-md-4 text-center justify-content-center align-items-center" style="margin-top:2.5%">
           <h2>Grafy</h2>
           <h5 style="margin-top:5%">Voľba jednotiek</h5>
           <div class="form-check">
@@ -411,10 +416,12 @@
               <input type="radio" class="form-check-input" name="optradio" value ="c" checked="checked">Stupne Celzia
             </label>
           </div>
-          <div id="plotdiv2" style="width:600px;height:250px;"></div>
-          <canvas style="margin-top:5%" id="gauge_h"></canvas>
+          <div class="text-center justify-content-center align-items-center" style="margin-top:10%">
+            <div id="plotdiv2" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+            <canvas style="margin-top:5%" id="gauge_h"></canvas>
+          </div>
         </div>
-        <div class="col-md-2" style="margin-top:2.5%">
+        <div class="col-md-3" style="margin-top:2.5%">
           <h2>Výpis údajov</h2>
           <div style="margin-top:10%" class="pre-scrollable" id="log"></div>
         </div>
@@ -424,26 +431,26 @@
   <section id="database">
     <div class="container-fluid" style="margin-top:5%">
       <div class="row">
-        <div class="col-sm-6" style="margin-bottom:20%">
+        <div class="col-md-6" style="margin-bottom:20%">
           <h2>Zobrazenie údajov</h2>
           <h5 style="margin-top:5%">Zobrazenie údajov z databázy</h5>
           <div class="buttons database" style="margin-top:5%">
             <button id="load" type="submit" class="btn btn-info" value="load">Load database</button>
             <button id="delete" type="submit" class="btn btn-info" value="delete">Delete</button>
           </div>
-          <div id="plotdiv3" style="width:600px;height:250px;"></div>
-          <div id="plotdiv4" style="width:600px;height:250px;"></div>
+          <div id="plotdiv3" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+          <div id="plotdiv4" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
           <div class="pre-scrollable" id="log2" style="margin-top:10%"></div>
           <hr class="d-sm-none">
         </div>
-        <div class="col-sm-6" style="margin-bottom:20%">
-          <h5 style="margin-top:12.5%">Zobrazenie údajov zo súboru</h5>
+        <div class="col-md-6" style="margin-bottom:20%">
+          <h5 style="margin-top:10%">Zobrazenie údajov zo súboru</h5>
           <div class="buttons file" style="margin-top:5%">
             <button id="load_file" type="submit" class="btn btn-info" value="load_file">Load file</button>
             <button id="delete_file" type="submit" class="btn btn-info"value="delete_file">Delete file</button>
           </div>
-          <div id="plotdiv5" style="width:600px;height:250px;"></div>
-          <div id="plotdiv6" style="width:600px;height:250px;"></div>
+          <div id="plotdiv5" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+          <div id="plotdiv6" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
           <div class="pre-scrollable" id="log3" style="margin-top:10%"></div>
         </div>
       </div>
