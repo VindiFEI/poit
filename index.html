@@ -301,6 +301,10 @@
             }
         return false; });
         
+        $('form#emit').submit(function(event) {
+            socket.emit('my_event', {value: $('#emit_value').val()});
+            return false; });
+        
         $('#connect').click(function(event) {
             console.log($('#connect').val());
             socket.emit('connect_request');
@@ -377,6 +381,17 @@
           <button id="disconnect" type="submit" class="btn btn-info" value="disconnect">Close</button>
           <button id="buttonVal" type="submit" class="btn btn-info" value="start">Start</button>
         </div>
+        
+        <!-- POZOR POZOR, NOVA VEC -->
+        
+        <h2>Send:</h2>
+        <form id="emit" method="POST" action='#'>
+            <input type="text" name="emit_value" id="emit_value" placeholder="Rozdiel/vlhkost">
+            <input type="submit" value="Send">
+        </form>
+        
+        <!-- POZOR POZOR, NOVA VEC -->
+        
         <div id="plotdiv" style="width:600px;height:250px;"></div>
         <canvas style="margin-top:5%" id="gauge"></canvas>
         <hr class="d-sm-none">

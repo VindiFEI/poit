@@ -31,6 +31,12 @@ def background_thread(args):
     
     while flag > 0:
         try:
+            if args:
+                A = dict(args).get('A')
+            else:
+                A = 1
+            
+            print(A)
             data, addr = s.recvfrom(1024)
             print("received message %s" % data)
             node = json.loads(data.decode("utf-8"))          
@@ -43,6 +49,13 @@ def background_thread(args):
             #ppm
             ppm = float(node['ppm'])
             
+            node['humidity'] = float(node['humidity'])/float(A)
+            
+            print('Viem pocitat')
+            
+            if (node['humidity']) < 0:
+                (node['humidity']) = 0
+
             #zapis do databazy
             cursor = db.cursor()
             sql_zapis = "INSERT INTO data (temperatureC, temperatureF, humidity, ppm) VALUES ('%s', '%s', '%s', '%s')"     
@@ -62,6 +75,8 @@ def background_thread(args):
             f.write("\n")
             f.close()
           
+            data = json.dumps(node)
+          
             # posielam klientovi opat JSON, aj ked to neni prave najefektivnejsie, aby sa parsoval dvakrat
             socketio.emit('json_data', {'data': data}, namespace='/')
         except:
@@ -70,12 +85,15 @@ def background_thread(args):
 def connection_thread():
     while 1:
         message =b"1"
-        print("message: %s" % message)
         s.sendto(message,('192.168.100.24',50000))
         
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
+
+@socketio.on('my_event')
+def message(message):   
+    session['A'] = message['value']    
 
 @socketio.on('start_stop_request')
 def start_stop(message):
@@ -95,7 +113,9 @@ def disconnect_request():
     message =b"0"
     s.sendto(message,('192.168.100.24',50000))
     print('Client disconnected')
+    flag = 0
     thread2 = None
+    s.close()
     disconnect()
 
 @socketio.on('connect_request')
@@ -108,8 +128,7 @@ def connect_request():
     s.bind(('', 50000))
     s.settimeout(0.5)
     with thread2_lock:
-        if thread is None:
-            thread2 = socketio.start_background_task(target=connection_thread)
+        thread2 = socketio.start_background_task(target=connection_thread)
     
 @socketio.on('delete_request')
 def delete_request():
