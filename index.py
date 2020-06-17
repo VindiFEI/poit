@@ -26,16 +26,6 @@ thread_lock = Lock()
 thread2 = None
 thread2_lock = Lock()
 
-# Problemy :
-#1. Open sa pripoji, start/stop funguje, close ukonci pripojenie. Avsak po refreshnuti stranky ide start/stop bez toho, aby som sa vobec pripojil(stlacil Open) :(((((((((
-
-# 3. neni som si isty, ci bude treba aj zastavovat vystup z mojej dosky, alebo nie. Ale ukazuje sa to ako komplikovanejsie,
-# nez som predpokladal. Dokazem odoslat na dosku 1(mozno pojde aj nula, ak rozbeham funkciu disconnect_request(), ale ako problem sa javi
-# ze ten vypis tam prebieha v cykle, on prijme paketu s jednotkou len raz, to znamena, ze dostane len raz prikaz na vykonanie odoslania nameranych
-# dat, vo zvysnych pripadoch uz ma nulu a vysielanie prestane. Ak to bude treba spravit, tak mi napada jedine, ze smerom na dosku bude potrebne odosielat
-# nepretrzite bud 1(posielaj) alebo 0(bud uz konecne ticho). Ine mi nenapada, neni som nejaky programator
-# 5.Mozno by bolo fajn, keby si prerobila tie buttony navyse(tj okrem open,close a start/stop) na drop down menu s potvrdenim?
-
 def background_thread(args):
     global data, addr  
     
@@ -76,7 +66,13 @@ def background_thread(args):
             socketio.emit('json_data', {'data': data}, namespace='/')
         except:
             pass
-    
+
+def connection_thread():
+    while 1:
+        message =b"1"
+        print("message: %s" % message)
+        s.sendto(message,('192.168.100.24',50000))
+        
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
@@ -99,6 +95,7 @@ def disconnect_request():
     message =b"0"
     s.sendto(message,('192.168.100.24',50000))
     print('Client disconnected')
+    thread2 = None
     disconnect()
 
 @socketio.on('connect_request')
@@ -110,9 +107,9 @@ def connect_request():
     db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
     s.bind(('', 50000))
     s.settimeout(0.5)
-    message =b"1"
-    print("message: %s" % message)
-    s.sendto(message,('192.168.100.24',50000))
+    with thread2_lock:
+        if thread is None:
+            thread2 = socketio.start_background_task(target=connection_thread)
     
 @socketio.on('delete_request')
 def delete_request():
