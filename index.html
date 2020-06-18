@@ -363,7 +363,7 @@
     </script>
 </head>
 <body>
-<div class="jumbotron text-center" style="margin-bottom:0">
+<div class="jumbotron text-center bg-light text-dark" style="margin-bottom:0">
   <h1>Monitorovanie a riadenie signálov</h1>
   <p>Záverečné zadanie - Bodorík, Hirjáková</p> 
 </div>
@@ -426,14 +426,14 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-md-4" style="margin-top:2.5%">
-              <div class="text-center justify-content-center align-items-center" style="margin-top:12%">
+            <div class="col-md-6" style="margin-top:2.5%">
+              <div class="text-center justify-content-center align-items-center" style="margin-top:10%">
                 <div id="plotdiv" style="width:600px;height:250px;"></div>
                 <canvas style="margin-top:5%" id="gauge"></canvas>
               </div>
             </div>
-            <div class="col-md-4" style="margin-top:2.5%">
-              <div class="text-center justify-content-center align-items-center" style="margin-top:12%">
+            <div class="col-md-6" style="margin-top:2.5%">
+              <div class="text-center justify-content-center align-items-center" style="margin-top:10%">
                 <div id="plotdiv2" style="width:600px;height:250px;"></div>
                 <canvas style="margin-top:5%" id="gauge_h"></canvas>
               </div>
@@ -458,9 +458,11 @@
             <button id="load" type="submit" class="btn btn-info" value="load">Load database</button>
             <button id="delete" type="submit" class="btn btn-info" value="delete">Delete</button>
           </div>
-          <div id="plotdiv3" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
-          <div id="plotdiv4" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
-          <div class="pre-scrollable" id="log2" style="margin-top:10%"></div>
+          <div class="text-center justify-content-center align-items-center" style="margin-top:10%">
+            <div id="plotdiv3" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+            <div id="plotdiv4" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+            <div class="pre-scrollable" id="log2" style="margin-top:10%"></div>
+          </div>
           <hr class="d-sm-none">
         </div>
         <div class="col-md-6" style="margin-bottom:20%">
@@ -469,9 +471,11 @@
             <button id="load_file" type="submit" class="btn btn-info" value="load_file">Load file</button>
             <button id="delete_file" type="submit" class="btn btn-info"value="delete_file">Delete file</button>
           </div>
-          <div id="plotdiv5" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
-          <div id="plotdiv6" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
-          <div class="pre-scrollable" id="log3" style="margin-top:10%"></div>
+          <div class="text-center justify-content-center align-items-center" style="margin-top:10%">
+            <div id="plotdiv5" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+            <div id="plotdiv6" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
+            <div class="pre-scrollable" id="log3" style="margin-top:10%"></div>
+          </div>
         </div>
       </div>
     </div>  
