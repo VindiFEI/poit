@@ -35,8 +35,6 @@ def background_thread(args):
                 A = dict(args).get('A')
             else:
                 A = 1
-            
-            print(A)
             data, addr = s.recvfrom(1024)
             print("received message %s" % data)
             node = json.loads(data.decode("utf-8"))          
@@ -50,11 +48,16 @@ def background_thread(args):
             ppm = float(node['ppm'])
             
             node['humidity'] = float(node['humidity'])/float(A)
+            humidity = float(humidity)/float(A)
             
             print('Viem pocitat')
             
+            #ak by vlhkost po deleni klesla pod nulu(delenie zapornym cislom), nastavim ju na 0
             if (node['humidity']) < 0:
                 (node['humidity']) = 0
+            #ak by stupla nad 100, nastavim ju na 100
+            if (node['humidity']) > 100:
+                (node['humidity']) = 100
 
             #zapis do databazy
             cursor = db.cursor()
@@ -62,7 +65,7 @@ def background_thread(args):
             cursor.execute(sql_zapis, (temperatureC, temperatureF, humidity, ppm))
             db.commit()
 
-            # otvorenie suboru
+            # otvorenie suboru, ak existuje, dopisuje sa na koniec. Ak neexistuje, vytvori sa novy
             try:
                 if os.path.exists("/home/pi/Documents/poit/zadanie/file/record.txt"):
                     f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'a')
@@ -70,13 +73,13 @@ def background_thread(args):
                     f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'w')
             except IOError:
                 print("Chyba pri otvarani suboru")
+            
+            data = json.dumps(node)
                 
             f.write(data)
             f.write("\n")
             f.close()
-          
-            data = json.dumps(node)
-          
+
             # posielam klientovi opat JSON, aj ked to neni prave najefektivnejsie, aby sa parsoval dvakrat
             socketio.emit('json_data', {'data': data}, namespace='/')
         except:
@@ -84,7 +87,8 @@ def background_thread(args):
 
 def connection_thread():
     while 1:
-        message =b"1"
+        #posielam nodemcu 1, signal, aby mohla zacat posielat namerane data
+        message =b'\x01'
         s.sendto(message,('192.168.100.24',50000))
         
 @app.route('/')
@@ -92,14 +96,15 @@ def index():
     return render_template('index.html', async_mode=socketio.async_mode)
 
 @socketio.on('my_event')
-def message(message):   
+def message(message):
+    #prijatie cisla z formularu
     session['A'] = message['value']    
 
 @socketio.on('start_stop_request')
 def start_stop(message):
     global thread, flag
+    #ak stlacim tlacidlo start, spustim background_thread
     if message['value'] == 'start':
-        print("Henlo")
         flag = 1
         with thread_lock:
             if thread is None:
@@ -109,14 +114,12 @@ def start_stop(message):
         thread = None
            
 @socketio.on('disconnect_request')
-def disconnect_request(): 
-    message =b"0"
-    s.sendto(message,('192.168.100.24',50000))
-    print('Client disconnected')
-    flag = 0
+def disconnect_request():
+    #zastavenie threadov a zavretie socketu
+    thread = None
     thread2 = None
+    flag = 0
     s.close()
-    disconnect()
 
 @socketio.on('connect_request')
 def connect_request():
@@ -132,6 +135,7 @@ def connect_request():
     
 @socketio.on('delete_request')
 def delete_request():
+    #vymazanie dat z databazy
     cursor = db.cursor()
     sql = "DELETE FROM data"
     cursor.execute(sql)
@@ -139,11 +143,13 @@ def delete_request():
 
 @socketio.on('delete_request_file')
 def delete_request_file():
+    #vymazanie suboru
     if os.path.exists("/home/pi/Documents/poit/zadanie/file/record.txt"):
         os.remove("/home/pi/Documents/poit/zadanie/file/record.txt")
         
 @socketio.on('load_request')
 def load_request():
+    #nahratie dat z databazy
     cursor = db.cursor()
     sql = "SELECT temperatureC, temperatureF, humidity, ppm FROM data"
     cursor.execute(sql)
@@ -153,6 +159,7 @@ def load_request():
     
 @socketio.on('load_request_file')
 def load_request_file():
+    #nahratie dat zo suboru
     try:
         if os.path.exists("/home/pi/Documents/poit/zadanie/file/record.txt"):
             f = open("/home/pi/Documents/poit/zadanie/file/record.txt",'r')

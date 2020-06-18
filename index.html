@@ -27,6 +27,9 @@
         var layout_h;
         var i = 0;
         var j = 0;
+        var k = 0;
+        var m = 0;
+        var n = 0;
         var x_db = new Array();
         var y_db = new Array();
         var x_h_db = new Array();
@@ -53,7 +56,7 @@
           height: 300,
           units: "C",
           minValue:0,
-          maxValue: 45,
+          maxValue: 50,
           majorTicks: [
               "0",
               "5",
@@ -65,13 +68,14 @@
               "35",
               "40",
               "45",
+              "50",
           ],
           minorTicks: 5,
           strokeTicks: true,
           highlights: [
               {
                   "from": 30,
-                  "to": 45,
+                  "to": 50,
                   "color": "rgba(200, 50, 50, .75)"
               }
           ],
@@ -131,7 +135,7 @@
         });
         gauge_h.draw();
         gauge_h.value = "0";
-        
+        //pri pouziti radio buttonov sa vynuluju polia a vymaze sa obsah vsetkych <div> kde sa uskutocnuje vypis
         $('input[type="radio"]').on('click change', function(e) {
             i = 0;
             j = 0;
@@ -146,13 +150,13 @@
         
 
         socket.on('json_data', function(msg) {
-        console.log(msg.data);
+        //console.log(msg.data);
         var json_string = jQuery.parseJSON(msg.data);
         gauge.value = json_string.temperature_C;
         gauge_h.value = json_string.humidity;
         x.push(parseFloat(i++));
         x_h.push(parseFloat(j++));
-        //pridat podmienku, ci chcem celsius alebo fahrenheit(zmenim 0 na 1)
+        //podmienka, ci chcem celsius alebo fahrenheit
         if(($('input[name=optradio]:checked').val()) == "c"){
             $('#log').append('Teplota: '+json_string.temperature_C+ ' Vlhkost: ' +json_string.humidity+ ' ppm: '  +json_string.ppm+'<br>').html();
             y.push(parseFloat(json_string.temperature_C));
@@ -203,18 +207,18 @@
         });
         
         socket.on('db_data', function(msg) {
-        for(i = 0, j = 0; i < (msg.data).length; i++, j++){
+        for(k = 0; k < (msg.data).length; k++){
             if(($('input[name=optradio]:checked').val()) == "c"){
-                y_db.push(parseFloat(msg.data[i][0]));  
-                $('#log2').append('Teplota(C): '+msg.data[i][0]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html(); 
+                y_db.push(parseFloat(msg.data[k][0]));  
+                $('#log2').append('Teplota(C): '+msg.data[k][0]+ ' Vlhkost: ' +msg.data[k][2]+  ' ppm: ' +msg.data[k][3]+ '<br>').html(); 
             }
             else{
-                y_db.push(parseFloat(msg.data[i][1]));
-                $('#log2').append('Teplota(F): '+msg.data[i][1]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html();  
+                y_db.push(parseFloat(msg.data[k][1]));
+                $('#log2').append('Teplota(F): '+msg.data[k][1]+ ' Vlhkost: ' +msg.data[k][2]+  ' ppm: ' +msg.data[k][3]+ '<br>').html();  
             }
-            y_h_db.push(parseFloat(msg.data[i][2]));
-            x_db.push(parseFloat(i));
-            x_h_db.push(parseFloat(i));
+            y_h_db.push(parseFloat(msg.data[k][2]));
+            x_db.push(parseFloat(k));
+            x_h_db.push(parseFloat(k));
         }
         //teplota
         trace_db = {
@@ -230,7 +234,7 @@
               title: 'y',
           }
         };
-        console.log(trace_db);
+        //console.log(trace_db);
         var traces_db = new Array();
         traces_db.push(trace_db);
         Plotly.newPlot($('#plotdiv3')[0], traces_db, layout_db);
@@ -247,23 +251,24 @@
               title: 'y',
           }
         };
-        console.log(trace_h_db);
+        //console.log(trace_h_db);
         var traces_h_db = new Array();
         traces_h_db.push(trace_h_db);
         Plotly.newPlot($('#plotdiv4')[0], traces_h_db, layout_h_db); 
         });
         
         socket.on('file_data', function(msg) {
-        console.log(msg.data);
+        //console.log(msg.data);
         var json_string = jQuery.parseJSON(msg.data);
-        $('#log3').append(+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
-        x_f.push(parseFloat(i++));
-        x_h_f.push(parseFloat(j++));
+        x_f.push(parseFloat(m++));
+        x_h_f.push(parseFloat(n++));
         if(($('input[name=optradio]:checked').val()) == "c"){
             y_f.push(parseFloat(json_string.temperature_C));
+            $('#log3').append('Teplota(C): '+json_string.temperature_C+ ' Vlhkost: ' +json_string.humidity+ ' ppm: '  +json_string.ppm+'<br>').html();
         }
         else{
             y_f.push(parseFloat(json_string.temperature_F));
+            $('#log3').append('Teplota(F): '+json_string.temperature_F+ ' Vlhkost: ' +json_string.humidity+ ' ppm: '  +json_string.ppm+'<br>').html();
         }
 
         y_h_f.push(parseFloat(json_string.humidity));
@@ -281,7 +286,7 @@
               title: 'y',
           }
         };
-        console.log(trace_f);
+        //console.log(trace_f);
         var traces_f = new Array();
         traces_f.push(trace_f);
         Plotly.newPlot($('#plotdiv5')[0], traces_f, layout_f);
@@ -300,7 +305,7 @@
               title: 'y',
           }
         };
-        console.log(trace_h_f);
+        //console.log(trace_h_f);
         var traces_h_f = new Array();
         traces_h_f.push(trace_h_f);
         Plotly.newPlot($('#plotdiv6')[0], traces_h_f, layout_h_f); 
@@ -334,6 +339,7 @@
         $('#delete').click(function(event) {
             console.log($('#delete').val());
             socket.emit('delete_request');
+            
             return false; });
         $('#delete_file').click(function(event) {
             console.log($('#delete_file').val());
@@ -341,8 +347,7 @@
             return false; });
         $('#load').click(function(event) {
             console.log($('#load').val());
-            i = 0;
-            j = 0;
+            k = 0;
             x_db = [];
             y_db = [];
             x_h_db = [];
@@ -351,8 +356,8 @@
             return false; });
         $('#load_file').click(function(event) {
             console.log($('#load_file').val());
-            i = 0;
-            j = 0;
+            m = 0;
+            n = 0;
             x_f = [];
             y_f = [];
             x_h_f = [];
