@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="dark-mode.css">
+  <link rel="stylesheet" href="static/libs/dark-mode-switch-1.0.0/dark-mode.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
@@ -14,20 +14,35 @@
   <script src="static/libs/plotly-latest.min.js"></script>
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
   <script src="static/libs/gauge.min.js"></script>
-  <script src="dark-mode-switch.min.js"></script>
+  
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function() {
         var x = new Array();
         var y = new Array();
-        var trace;
-        var layout;
-        var i = 0;
         var x_h = new Array();
         var y_h = new Array();
+        var trace;
+        var layout;
         var trace_h;
         var layout_h;
+        var i = 0;
         var j = 0;
-        var pocet_db = 0;
+        var x_db = new Array();
+        var y_db = new Array();
+        var x_h_db = new Array();
+        var y_h_db = new Array();
+        var trace_db;
+        var layout_db;
+        var trace_h_db;
+        var layout_h_db;
+        var x_f = new Array();
+        var y_f = new Array();
+        var x_h_f = new Array();
+        var y_h_f = new Array();
+        var trace_f;
+        var layout_f;
+        var trace_h_f;
+        var layout_h_f;
         
         namespace = '/'
         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
@@ -152,6 +167,7 @@
         trace = {
             x: x,
             y: y,
+            
         };       
         layout = {
           title: 'Teplota',
@@ -162,10 +178,6 @@
               title: 'y',
           }
         };
-    /*layout = Layout(
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)'
-)  plotly transparent background??*/
         console.log(trace);
         var traces = new Array();
         traces.push(trace);
@@ -193,23 +205,23 @@
         socket.on('db_data', function(msg) {
         for(i = 0, j = 0; i < (msg.data).length; i++, j++){
             if(($('input[name=optradio]:checked').val()) == "c"){
-                y.push(parseFloat(msg.data[i][0]));  
+                y_db.push(parseFloat(msg.data[i][0]));  
                 $('#log2').append('Teplota(C): '+msg.data[i][0]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html(); 
             }
             else{
-                y.push(parseFloat(msg.data[i][1]));
+                y_db.push(parseFloat(msg.data[i][1]));
                 $('#log2').append('Teplota(F): '+msg.data[i][1]+ ' Vlhkost: ' +msg.data[i][2]+  ' ppm: ' +msg.data[i][3]+ '<br>').html();  
             }
-            y_h.push(parseFloat(msg.data[i][2]));
-            x.push(parseFloat(i));
-            x_h.push(parseFloat(i));
+            y_h_db.push(parseFloat(msg.data[i][2]));
+            x_db.push(parseFloat(i));
+            x_h_db.push(parseFloat(i));
         }
         //teplota
-        trace = {
-            x: x,
-            y: y,
+        trace_db = {
+            x: x_db,
+            y: y_db,
         };       
-        layout = {
+        layout_db = {
           title: 'Teplota',
           xaxis: {
               title: 'x',
@@ -218,15 +230,15 @@
               title: 'y',
           }
         };
-        console.log(trace);
-        var traces = new Array();
-        traces.push(trace);
-        Plotly.newPlot($('#plotdiv3')[0], traces, layout);
-        trace_h = {
-            x: x_h,
-            y: y_h,
+        console.log(trace_db);
+        var traces_db = new Array();
+        traces_db.push(trace_db);
+        Plotly.newPlot($('#plotdiv3')[0], traces_db, layout_db);
+        trace_h_db = {
+            x: x_h_db,
+            y: y_h_db,
         };       
-        layout_h = {
+        layout_h_db = {
           title: 'Vlhkost',
           xaxis: {
               title: 'x',
@@ -235,32 +247,32 @@
               title: 'y',
           }
         };
-        console.log(trace_h);
-        var traces_h = new Array();
-        traces_h.push(trace_h);
-        Plotly.newPlot($('#plotdiv4')[0], traces_h, layout_h); 
+        console.log(trace_h_db);
+        var traces_h_db = new Array();
+        traces_h_db.push(trace_h_db);
+        Plotly.newPlot($('#plotdiv4')[0], traces_h_db, layout_h_db); 
         });
         
         socket.on('file_data', function(msg) {
         console.log(msg.data);
         var json_string = jQuery.parseJSON(msg.data);
         $('#log3').append(+json_string.temperature_C+ ', ' +json_string.temperature_F+ ', ' +json_string.humidity+ ', '  +json_string.ppm+'<br>').html();
-        x.push(parseFloat(i++));
-        x_h.push(parseFloat(j++));
+        x_f.push(parseFloat(i++));
+        x_h_f.push(parseFloat(j++));
         if(($('input[name=optradio]:checked').val()) == "c"){
-            y.push(parseFloat(json_string.temperature_C));
+            y_f.push(parseFloat(json_string.temperature_C));
         }
         else{
-            y.push(parseFloat(json_string.temperature_F));
+            y_f.push(parseFloat(json_string.temperature_F));
         }
 
-        y_h.push(parseFloat(json_string.humidity));
+        y_h_f.push(parseFloat(json_string.humidity));
         //teplota
-        trace = {
-            x: x,
-            y: y,
+        trace_f = {
+            x: x_f,
+            y: y_f,
         };       
-        layout = {
+        layout_f = {
           title: 'Teplota',
           xaxis: {
               title: 'x',
@@ -269,17 +281,17 @@
               title: 'y',
           }
         };
-        console.log(trace);
-        var traces = new Array();
-        traces.push(trace);
-        Plotly.newPlot($('#plotdiv5')[0], traces, layout);
+        console.log(trace_f);
+        var traces_f = new Array();
+        traces_f.push(trace_f);
+        Plotly.newPlot($('#plotdiv5')[0], traces_f, layout_f);
         
         //vlhkost
-        trace_h = {
-            x: x_h,
-            y: y_h,
+        trace_h_f = {
+            x: x_h_f,
+            y: y_h_f,
         };       
-        layout_h = {
+        layout_h_f = {
           title: 'Vlhkost',
           xaxis: {
               title: 'x',
@@ -288,10 +300,10 @@
               title: 'y',
           }
         };
-        console.log(trace_h);
-        var traces_h = new Array();
-        traces_h.push(trace_h);
-        Plotly.newPlot($('#plotdiv6')[0], traces_h, layout_h); 
+        console.log(trace_h_f);
+        var traces_h_f = new Array();
+        traces_h_f.push(trace_h_f);
+        Plotly.newPlot($('#plotdiv6')[0], traces_h_f, layout_h_f); 
         });
         
         $('#buttonVal').click(function(event) {
@@ -329,35 +341,28 @@
             return false; });
         $('#load').click(function(event) {
             console.log($('#load').val());
-            socket.emit('load_request');
             i = 0;
             j = 0;
-            x = [];
-            y = [];
-            x_h = [];
-            y_h = [];
+            x_db = [];
+            y_db = [];
+            x_h_db = [];
+            y_h_db = [];
+            socket.emit('load_request');
             return false; });
         $('#load_file').click(function(event) {
             console.log($('#load_file').val());
-            socket.emit('load_request_file');
             i = 0;
             j = 0;
-            x = [];
-            y = [];
-            x_h = [];
-            y_h = [];
+            x_f = [];
+            y_f = [];
+            x_h_f = [];
+            y_h_f = [];
+            socket.emit('load_request_file');
             return false; });
         });
     </script>
-  <style>
-  .fakeimg {
-    height: 200px;
-    background: #aaa;
-  }
-  </style>
 </head>
 <body>
-
 <div class="jumbotron text-center" style="margin-bottom:0">
   <h1>Monitorovanie a riadenie signálov</h1>
   <p>Záverečné zadanie - Bodorík, Hirjáková</p> 
@@ -376,7 +381,7 @@
     <ul class="navbar-nav">
       <li class="nav-item">
         <div class="custom-control custom-switch">
-          <input type="checkbox" class="custom-control-input " id="darkSwitch" />
+          <input type="checkbox" class="custom-control-input" id="darkSwitch" />
           <label class="custom-control-label text-white" for="darkSwitch">Dark Mode</label>
         </div>
       </li>  
@@ -439,14 +444,12 @@
       </div>
       <div class="row">
         <div class="col-md-4" style="margin-top:2.5%">
-          <p>placeholder</p>
           <div class="text-center justify-content-center align-items-center" style="margin-top:12%">
             <div id="plotdiv" style="width:600px;height:250px;"></div>
             <canvas style="margin-top:5%" id="gauge"></canvas>
           </div>
         </div>
         <div class="col-md-5" style="margin-top:2.5%">
-          <p>placeholder</p>
           <div class="text-center justify-content-center align-items-center" style="margin-top:10%">
             <div id="plotdiv2" class="text-center justify-content-center align-items-center" style="width:600px;height:250px;"></div>
             <canvas style="margin-top:5%" id="gauge_h"></canvas>
@@ -515,5 +518,8 @@
 <div class="jumbotron text-center" style="margin-bottom:0">
   <p>Záverečné zadanie - Bodorík, Hirjáková</p>
 </div>
+<footer>
+</footer>
+<script src="static/libs/dark-mode-switch-1.0.0/dark-mode-switch.min.js"></script>
 </body>
 </html>
