@@ -50,7 +50,8 @@ void loop(){
   udp.beginPacket(host, port);
   udp.parsePacket();
   byte x = udp.read();
-  if(x > 0){
+  Serial.println("Neposielam");
+  if(x == 0x01){
       float h = dht.readHumidity();
       // teplota(Celsius)
       float t = dht.readTemperature();
@@ -77,6 +78,6 @@ void loop(){
       udp.print(string);
       udp.endPacket();
     
-      delay(5000);
+      delay(2000);
   }
 }
