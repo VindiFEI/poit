@@ -38,7 +38,7 @@ void setup(){
     Serial.print(".");
   }
   Serial.println("");
-  Serial.print("Conected to ");
+  Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
@@ -50,7 +50,6 @@ void loop(){
   udp.beginPacket(host, port);
   udp.parsePacket();
   byte x = udp.read();
-  Serial.println("Neposielam");
   if(x == 0x01){
       float h = dht.readHumidity();
       // teplota(Celsius)
@@ -80,4 +79,6 @@ void loop(){
     
       delay(2000);
   }
+  else
+    Serial.println("Neposielam");
 }
